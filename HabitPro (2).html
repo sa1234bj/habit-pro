@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0F0F12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="HabitPro - Profesyonel alışkanlık takip uygulaması. Seri oluştur, ruh halini takip et, hedeflerine ulaş.">
+<title>HabitPro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- PWA Manifest (inline) -->
+<link rel="manifest" href='data:application/manifest+json,{
+  "name": "HabitPro - Alışkanlık Takip",
+  "short_name": "HabitPro",
+  "description": "Profesyonel alışkanlık takip uygulaması",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0F0F12",
+  "theme_color": "#0F0F12",
+  "orientation": "portrait",
+  "lang": "tr",
+  "icons": [
+    {"src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%236366F1%22 width=%22100%22 height=%22100%22 rx=%2220%22/><text y=%22.9em%22 font-size=%2270%22 x=%2215%22>✅</text></svg>", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable"},
+    {"src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%236366F1%22 width=%22100%22 height=%22100%22 rx=%2220%22/><text y=%22.9em%22 font-size=%2270%22 x=%2215%22>✅</text></svg>", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}'>
+
+<style>
+:root {
+  --bg: #0F0F12;
+  --surface: #1A1A22;
+  --card: #24242E;
+  --border: #2E2E3A;
+  --primary: #6366F1;
+  --primary-dark: #4F46E5;
+  --accent: #22D3EE;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --text: #FFFFFF;
+  --text-muted: rgba(255,255,255,0.55);
+  --radius: 16px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+.app {
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; position: relative;
+}
+.screen { display: none; flex: 1; flex-direction: column; padding-bottom: 100px; }
+.screen.active { display: flex; }
+
+/* Header */
+.header {
+  padding: 16px 20px 8px; position: sticky; top: 0;
+  background: linear-gradient(to bottom, var(--bg) 80%, transparent); z-index: 50;
+}
+.header-top { display: flex; justify-content: space-between; align-items: center; }
+.greeting { font-size: 13px; color: var(--text-muted); }
+.app-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.premium-badge {
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  padding: 7px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px; cursor: pointer;
+}
+.premium-badge.active { background: linear-gradient(135deg, #10B981, #059669); }
+
+/* Quote */
+.quote-bar {
+  margin: 8px 20px 0; padding: 12px 14px;
+  background: var(--card); border-radius: 12px; border: 1px solid var(--border);
+  font-size: 13px; color: var(--text-muted); font-style: italic; line-height: 1.4;
+}
+
+/* Progress */
+.progress-card {
+  margin: 12px 20px 8px; padding: 18px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(34,211,238,0.12));
+  border: 1px solid rgba(99,102,241,0.3); border-radius: 18px;
+  display: flex; align-items: center; gap: 16px;
+}
+.progress-ring { width: 64px; height: 64px; position: relative; flex-shrink: 0; }
+.progress-ring svg { transform: rotate(-90deg); }
+.progress-ring circle { fill: none; stroke-width: 6; }
+.progress-ring .bg { stroke: rgba(255,255,255,0.1); }
+.progress-ring .fill { stroke: var(--primary); stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+.progress-percent {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+}
+.progress-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.progress-info p { font-size: 13px; color: var(--text-muted); }
+.streak-row { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; color: var(--warning); }
+
+/* Celebration banner */
+.celeb-banner {
+  display: none; margin: 8px 20px; padding: 14px;
+  background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(34,211,238,0.15));
+  border: 1px solid rgba(16,185,129,0.4); border-radius: 14px;
+  text-align: center; font-weight: 600; font-size: 14px; animation: pulse 1.5s infinite;
+}
+.celeb-banner.show { display: block; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.02)} }
+
+/* Mood */
+.mood-section { padding: 12px 20px 8px; }
+.mood-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.mood-row { display: flex; justify-content: space-between; gap: 8px; }
+.mood-btn {
+  flex: 1; aspect-ratio: 1; max-width: 58px; border-radius: 14px;
+  background: var(--card); border: 2px solid var(--border);
+  font-size: 24px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.mood-btn.selected { border-color: var(--primary); background: rgba(99,102,241,0.15); transform: scale(1.08); }
+.mood-history { display: flex; gap: 6px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; }
+.mood-day { flex-shrink: 0; text-align: center; font-size: 11px; color: var(--text-muted); }
+.mood-day .emoji { font-size: 20px; display: block; margin-bottom: 2px; }
+
+/* Habits */
+.section-label {
+  padding: 12px 20px 6px; font-size: 13px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px;
+}
+.habit-list { padding: 4px 20px 20px; flex: 1; }
+.habit-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 14px;
+  transition: all 0.25s ease; cursor: pointer; user-select: none;
+}
+.habit-card.done {
+  background: color-mix(in srgb, var(--habit-color) 12%, var(--card));
+  border-color: color-mix(in srgb, var(--habit-color) 40%, transparent);
+}
+.habit-icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0; transition: all 0.2s;
+}
+.habit-info { flex: 1; min-width: 0; }
+.habit-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.habit-card.done .habit-title { text-decoration: line-through; opacity: 0.7; }
+.habit-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.habit-cat {
+  display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 6px;
+  background: rgba(255,255,255,0.08); color: var(--text-muted); margin-top: 3px;
+}
+.streak-badge {
+  display: flex; align-items: center; gap: 3px;
+  padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+.empty-state .icon { font-size: 52px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state h3 { font-size: 16px; margin-bottom: 6px; color: rgba(255,255,255,0.5); }
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; background: var(--surface);
+  border-top: 1px solid var(--border); display: flex; justify-content: space-around;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); z-index: 100;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 16px; cursor: pointer; color: var(--text-muted);
+  font-size: 11px; font-weight: 500; border: none; background: none; font-family: inherit;
+}
+.nav-item.active { color: var(--primary); }
+.nav-item svg { width: 22px; height: 22px; }
+
+/* FAB */
+.fab {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--primary); color: white; border: none; border-radius: 28px;
+  padding: 12px 22px; font-size: 15px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4); z-index: 90; font-family: inherit;
+}
+.fab:active { transform: translateX(-50%) scale(0.95); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); width: 100%; max-width: 480px;
+  border-radius: 24px 24px 0 0; padding: 12px 20px 30px;
+  max-height: 92vh; overflow-y: auto; animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 16px; }
+.modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-muted); }
+.form-input {
+  width: 100%; background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 13px 16px; color: white; font-size: 15px;
+  font-family: inherit; outline: none;
+}
+.form-input:focus { border-color: var(--primary); }
+.form-input::placeholder { color: rgba(255,255,255,0.3); }
+
+.color-grid, .icon-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.color-dot {
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  border: 3px solid transparent; transition: transform 0.15s;
+}
+.color-dot.selected { border-color: white; transform: scale(1.12); }
+.icon-btn {
+  width: 42px; height: 42px; border-radius: 12px; background: var(--card);
+  border: 1.5px solid var(--border); display: flex; align-items: center;
+  justify-content: center; font-size: 18px; cursor: pointer;
+}
+.icon-btn.selected { border-color: var(--primary); background: rgba(99,102,241,0.15); }
+
+.day-row { display: flex; justify-content: space-between; gap: 5px; }
+.day-btn {
+  flex: 1; height: 38px; border-radius: 10px; background: var(--card);
+  border: 1.5px solid var(--border); color: var(--text-muted);
+  font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.day-btn.selected { background: var(--primary); border-color: var(--primary); color: white; }
+
+.cat-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-btn {
+  padding: 8px 14px; border-radius: 20px; background: var(--card);
+  border: 1.5px solid var(--border); color: var(--text-muted);
+  font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.cat-btn.selected { background: rgba(99,102,241,0.2); border-color: var(--primary); color: white; }
+
+.btn-primary {
+  width: 100%; background: var(--primary); color: white; border: none;
+  border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 600;
+  cursor: pointer; font-family: inherit; margin-top: 8px;
+}
+.btn-primary:active { opacity: 0.85; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px; margin-bottom: 16px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+.stat-card .icon { font-size: 20px; margin-bottom: 8px; }
+.stat-card .value { font-size: 22px; font-weight: 700; }
+.stat-card .label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.calendar-section { padding: 0 20px 16px; }
+.calendar-section h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.heatmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.heat-cell {
+  aspect-ratio: 1; border-radius: 4px; background: rgba(255,255,255,0.06);
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.3);
+}
+.heat-cell.level1 { background: rgba(99,102,241,0.25); }
+.heat-cell.level2 { background: rgba(99,102,241,0.45); color: white; }
+.heat-cell.level3 { background: rgba(99,102,241,0.7); color: white; }
+.heat-cell.level4 { background: var(--primary); color: white; }
+.heat-cell.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.habit-stat {
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 16px; margin: 0 20px 10px;
+}
+.habit-stat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.habit-stat-dot { width: 10px; height: 10px; border-radius: 50%; }
+.progress-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.mini-stats { display: flex; justify-content: space-between; }
+.mini-stat { text-align: center; }
+.mini-stat .v { font-weight: 700; font-size: 14px; }
+.mini-stat .l { font-size: 11px; color: var(--text-muted); }
+
+/* Settings */
+.settings-list { padding: 0 20px; }
+.settings-section { margin-bottom: 22px; }
+.settings-section-title {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.settings-item {
+  display: flex; align-items: center; gap: 14px; padding: 13px 0;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-item .icon {
+  width: 36px; height: 36px; border-radius: 10px; background: var(--card);
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.settings-item .text { flex: 1; }
+.settings-item .text .title { font-size: 15px; font-weight: 500; }
+.settings-item .text .sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.settings-item .arrow { color: rgba(255,255,255,0.25); font-size: 18px; }
+
+.premium-card {
+  margin: 0 20px 18px; padding: 18px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.12));
+  border: 1px solid rgba(99,102,241,0.3); display: flex; align-items: center; gap: 14px; cursor: pointer;
+}
+.premium-card.active {
+  background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.12));
+  border-color: rgba(16,185,129,0.3);
+}
+
+/* Premium options */
+.premium-option {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 18px; background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+}
+.premium-option.highlight { border-color: var(--primary); background: rgba(99,102,241,0.12); }
+.premium-option .price { font-size: 18px; font-weight: 700; }
+.premium-option.highlight .price { color: var(--primary); }
+.premium-features {
+  list-style: none; margin: 12px 0 18px; padding: 0;
+}
+.premium-features li {
+  padding: 7px 0; font-size: 14px; display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.premium-features li:last-child { border-bottom: none; }
+
+/* Toggle */
+.toggle {
+  width: 48px; height: 28px; background: var(--border); border-radius: 14px;
+  position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--primary); }
+.toggle::after {
+  content: ''; position: absolute; width: 22px; height: 22px; background: white;
+  border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* Toast */
+.toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px);
+  background: var(--card); border: 1px solid var(--border); padding: 12px 20px;
+  border-radius: 12px; font-size: 14px; font-weight: 500; z-index: 300;
+  transition: transform 0.3s ease; white-space: nowrap;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: var(--success); }
+.toast.warning { border-color: var(--warning); }
+
+/* Action sheet */
+.action-item {
+  display: flex; align-items: center; gap: 12px; padding: 16px 4px;
+  font-size: 16px; cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.action-item:last-child { border-bottom: none; }
+.action-item.danger { color: var(--danger); }
+
+/* Install banner */
+.install-banner {
+  display: none; margin: 8px 20px; padding: 12px 14px;
+  background: var(--card); border: 1px solid var(--primary); border-radius: 12px;
+  font-size: 13px; align-items: center; gap: 10px;
+}
+.install-banner.show { display: flex; }
+.install-banner button {
+  margin-left: auto; background: var(--primary); color: white; border: none;
+  padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+
+/* Confetti canvas */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 250; }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="app" id="app">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <div class="greeting" id="greeting">Günaydın 👋</div>
+          <div class="app-title">HabitPro</div>
+        </div>
+        <div class="premium-badge" id="premiumBadge" onclick="showPremium()">
+          <span>⭐</span> <span id="premiumLabel">Premium</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="install-banner" id="installBanner">
+      <span>📱 Ana ekrana ekle, uygulama gibi kullan</span>
+      <button onclick="installPWA()">Ekle</button>
+    </div>
+
+    <div class="quote-bar" id="quoteBar">"Küçük adımlar büyük değişimler yaratır."</div>
+
+    <div class="progress-card">
+      <div class="progress-ring">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle class="bg" cx="32" cy="32" r="28"/>
+          <circle class="fill" id="progressCircle" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+        </svg>
+        <div class="progress-percent" id="progressPercent">0%</div>
+      </div>
+      <div class="progress-info">
+        <h3>Bugünkü İlerleme</h3>
+        <p id="progressText">0 / 0 alışkanlık tamamlandı</p>
+        <div class="streak-row" id="longestStreak" style="display:none">
+          🔥 En uzun seri: <span id="longestStreakVal">0</span> gün
+        </div>
+      </div>
+    </div>
+
+    <div class="celeb-banner" id="celebBanner">🎉 Tüm alışkanlıklar tamamlandı! Harikasın!</div>
+
+    <div class="mood-section">
+      <h3>Bugün nasılsın?</h3>
+      <div class="mood-row" id="moodRow">
+        <button class="mood-btn" data-mood="1" onclick="setMood(1)">😞</button>
+        <button class="mood-btn" data-mood="2" onclick="setMood(2)">😐</button>
+        <button class="mood-btn" data-mood="3" onclick="setMood(3)">🙂</button>
+        <button class="mood-btn" data-mood="4" onclick="setMood(4)">😊</button>
+        <button class="mood-btn" data-mood="5" onclick="setMood(5)">🤩</button>
+      </div>
+      <div class="mood-history" id="moodHistory"></div>
+    </div>
+
+    <div class="section-label">Bugünün alışkanlıkları</div>
+    <div class="habit-list" id="habitList"></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="screen" id="screen-stats">
+    <div class="header"><div class="app-title" style="margin-top:8px">İstatistikler</div></div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="calendar-section">
+      <h3>Son 28 Gün Aktivite</h3>
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+    <div id="habitStats"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="header"><div class="app-title" style="margin-top:8px">Ayarlar</div></div>
+
+    <div class="premium-card" id="settingsPremium" onclick="showPremium()">
+      <div style="font-size:28px" id="settingsPremiumIcon">⭐</div>
+      <div style="flex:1">
+        <div style="font-weight:600" id="settingsPremiumTitle">Ücretsiz Plan</div>
+        <div style="font-size:13px;color:var(--text-muted)" id="settingsPremiumSub">En fazla 5 alışkanlık</div>
+      </div>
+      <div style="color:var(--primary);font-weight:600;font-size:13px" id="settingsPremiumAction">Yükselt →</div>
+    </div>
+
+    <div class="settings-list">
+      <div class="settings-section">
+        <div class="settings-section-title">Bildirimler</div>
+        <div class="settings-item" onclick="toggleNotifications()">
+          <div class="icon">🔔</div>
+          <div class="text">
+            <div class="title">Hatırlatıcılar</div>
+            <div class="sub" id="notifStatus">Kapalı</div>
+          </div>
+          <div class="toggle" id="notifToggle"></div>
+        </div>
+        <div class="settings-item" id="dailyReminderRow" style="display:none">
+          <div class="icon">⏰</div>
+          <div class="text">
+            <div class="title">Günlük hatırlatma saati</div>
+            <div class="sub">Her gün bu saatte bildirim al</div>
+          </div>
+          <input type="time" id="dailyReminderTime" value="09:00" onchange="saveDailyReminder()"
+            style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:white;font-family:inherit">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Veri</div>
+        <div class="settings-item" onclick="exportData()">
+          <div class="icon">📤</div>
+          <div class="text"><div class="title">Verileri Dışa Aktar</div><div class="sub">JSON olarak indir</div></div>
+          <div class="arrow">›</div>
+        </div>
+        <div class="settings-item" onclick="confirmClear()">
+          <div class="icon">🗑️</div>
+          <div class="text"><div class="title" style="color:var(--danger)">Tüm Verileri Sil</div><div class="sub">Geri alınamaz</div></div>
+          <div class="arrow">›</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Hakkında</div>
+        <div class="settings-item">
+          <div class="icon">ℹ️</div>
+          <div class="text"><div class="title">HabitPro v1.1.0</div><div class="sub">Profesyonel alışkanlık takip</div></div>
+        </div>
+        <div class="settings-item">
+          <div class="icon">🇹🇷</div>
+          <div class="text"><div class="title">Made in Turkey</div><div class="sub">PWA → Play Store hazır</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" id="fab" onclick="showAddHabit()">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    Ekle
+  </button>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-screen="home" onclick="switchScreen('home')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Alışkanlıklar
+    </button>
+    <button class="nav-item" data-screen="stats" onclick="switchScreen('stats')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      İstatistik
+    </button>
+    <button class="nav-item" data-screen="settings" onclick="switchScreen('settings')">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Ayarlar
+    </button>
+  </nav>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Yeni Alışkanlık</h2>
+    <div class="form-group">
+      <label>Alışkanlık adı</label>
+      <input class="form-input" id="habitTitle" placeholder="Örn: Su içmek, Kitap okumak..." maxlength="40">
+    </div>
+    <div class="form-group">
+      <label>Açıklama (opsiyonel)</label>
+      <input class="form-input" id="habitDesc" placeholder="Kısa bir not..." maxlength="80">
+    </div>
+    <div class="form-group">
+      <label>Kategori</label>
+      <div class="cat-row" id="catRow"></div>
+    </div>
+    <div class="form-group">
+      <label>Renk</label>
+      <div class="color-grid" id="colorGrid"></div>
+    </div>
+    <div class="form-group">
+      <label>İkon</label>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+    <div class="form-group">
+      <label>Hangi günler? <span style="font-weight:400;opacity:0.6">(boş = her gün)</span></label>
+      <div class="day-row" id="dayRow"></div>
+    </div>
+    <div class="form-group">
+      <label>Hatırlatıcı</label>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="toggle" id="reminderToggle" onclick="this.classList.toggle('on')"></div>
+        <input type="time" id="reminderTime" value="09:00"
+          style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:white;font-family:inherit;font-size:14px">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveHabit()">Alışkanlığı Oluştur</button>
+  </div>
+</div>
+
+<!-- PREMIUM MODAL -->
+<div class="modal-overlay" id="premiumModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;font-size:42px;margin-bottom:6px">⭐</div>
+    <h2 style="text-align:center;margin-bottom:6px">HabitPro Premium</h2>
+    <p style="text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:8px">
+      Alışkanlıklarını bir üst seviyeye taşı
+    </p>
+
+    <ul class="premium-features">
+      <li>✅ Sınırsız alışkanlık</li>
+      <li>✅ Gelişmiş istatistikler & heatmap</li>
+      <li>✅ Hatırlatıcı bildirimler</li>
+      <li>✅ Kategoriler & özel ikonlar</li>
+      <li>✅ Reklamsız deneyim</li>
+      <li>✅ Öncelikli destek</li>
+    </ul>
+
+    <div class="premium-option" onclick="buyPremium('monthly')">
+      <div><div style="font-weight:600">Aylık</div><div style="font-size:11px;color:var(--text-muted)">En esnek</div></div>
+      <div class="price">₺39,99</div>
+    </div>
+    <div class="premium-option highlight" onclick="buyPremium('yearly')">
+      <div><div style="font-weight:600">Yıllık</div><div style="font-size:11px;color:var(--text-muted)">En popüler · %58 tasarruf</div></div>
+      <div class="price">₺199,99</div>
+    </div>
+    <div class="premium-option" onclick="buyPremium('lifetime')">
+      <div><div style="font-weight:600">Ömür Boyu</div><div style="font-size:11px;color:var(--text-muted)">Tek seferlik ödeme</div></div>
+      <div class="price">₺399,99</div>
+    </div>
+
+    <button class="btn-primary" style="background:transparent;border:1px solid var(--border);margin-top:10px" onclick="hidePremium()">Daha Sonra</button>
+    <p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.4">
+      Demo sürümü — Gerçek ödeme Play Store Billing ile yapılacak.<br>
+      İstediğin zaman iptal edebilirsin.
+    </p>
+  </div>
+</div>
+
+<!-- ACTION SHEET -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="action-item" onclick="archiveHabit()">📦 Arşivle</div>
+    <div class="action-item danger" onclick="deleteHabit()">🗑️ Sil</div>
+    <div class="action-item" onclick="hideAction()" style="justify-content:center;color:var(--text-muted)">İptal</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COLORS = ['#6366F1','#8B5CF6','#EC4899','#EF4444','#F97316','#F59E0B','#10B981','#14B8A6','#06B6D4','#3B82F6','#84CC16','#A855F7'];
+const ICONS = ['✅','💪','📚','💧','🧘','😴','🍎','🏃','🧠','💼','💻','🎵','🎨','💰','❤️','🌱'];
+const DAYS = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+const CATS = ['Genel','Sağlık','Spor','Verimlilik','Zihin','Öğrenme','Sosyal','Diğer'];
+const FREE_LIMIT = 5;
+const MOOD_EMOJIS = ['','😞','😐','🙂','😊','🤩'];
+const QUOTES = [
+  '"Küçük adımlar büyük değişimler yaratır."',
+  '"Bugün yaptığın şey, yarının temelidir."',
+  '"Tutarlılık, yetenekten daha önemlidir."',
+  '"Her gün %1 daha iyi ol."',
+  '"Alışkanlıklar, kimliğinin tuğlalarıdır."',
+  '"Başlamak için mükemmel olmak zorunda değilsin."',
+  '"Disiplin, motivasyonun olmadığı günlerde devreye girer."',
+  '"İlerleme, mükemmellikten daha değerlidir."'
+];
+
+let state = {
+  habits: [], isPremium: false, moods: {},
+  notificationsEnabled: false, dailyReminderTime: '09:00',
+  selectedColor: 0, selectedIcon: 0, selectedDays: [], selectedCat: 'Genel',
+  actionHabitId: null
+};
+
+let deferredPrompt = null;
+
+// ===== STORAGE =====
+function load() {
+  try {
+    const raw = localStorage.getItem('habitpro_v1');
+    if (raw) {
+      const d = JSON.parse(raw);
+      state.habits = d.habits || [];
+      state.isPremium = d.isPremium || false;
+      state.moods = d.moods || {};
+      state.notificationsEnabled = d.notificationsEnabled || false;
+      state.dailyReminderTime = d.dailyReminderTime || '09:00';
+    }
+  } catch(e) {}
+}
+function save() {
+  localStorage.setItem('habitpro_v1', JSON.stringify({
+    habits: state.habits, isPremium: state.isPremium, moods: state.moods,
+    notificationsEnabled: state.notificationsEnabled, dailyReminderTime: state.dailyReminderTime
+  }));
+}
+
+// ===== HELPERS =====
+function dateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function currentStreak(h) {
+  let streak = 0, day = new Date();
+  if (!h.completions[dateKey(day)]) day.setDate(day.getDate() - 1);
+  while (h.completions[dateKey(day)]) { streak++; day.setDate(day.getDate() - 1); }
+  return streak;
+}
+function bestStreak(h) {
+  const dates = Object.keys(h.completions).filter(k => h.completions[k]).sort();
+  if (!dates.length) return 0;
+  let best = 1, cur = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const diff = (new Date(dates[i]) - new Date(dates[i-1])) / 86400000;
+    if (diff === 1) { cur++; best = Math.max(best, cur); } else cur = 1;
+  }
+  return best;
+}
+function completionRate(h) {
+  const total = Math.max(1, Math.floor((Date.now() - new Date(h.createdAt)) / 86400000) + 1);
+  return Math.min(1, Object.values(h.completions).filter(Boolean).length / total);
+}
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show ' + type;
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// ===== CONFETTI =====
+function fireConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const pieces = Array.from({length: 80}, () => ({
+    x: Math.random() * canvas.width, y: -20 - Math.random() * 100,
+    w: 6 + Math.random() * 6, h: 4 + Math.random() * 4,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    speed: 2 + Math.random() * 4, rot: Math.random() * 360, rotSpeed: -4 + Math.random() * 8
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.y += p.speed; p.rot += p.rotSpeed;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h); ctx.restore();
+    });
+    frame++;
+    if (frame < 120) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ===== RENDER =====
+function render() {
+  renderGreeting(); renderPremium(); renderProgress(); renderMoods();
+  renderHabits(); renderStats(); renderSettings(); updateNotifUI();
+  document.getElementById('quoteBar').textContent = QUOTES[new Date().getDate() % QUOTES.length];
+}
+
+function renderGreeting() {
+  const h = new Date().getHours();
+  document.getElementById('greeting').textContent = h < 12 ? 'Günaydın 👋' : h < 18 ? 'İyi günler ☀️' : 'İyi akşamlar 🌙';
+}
+
+function renderPremium() {
+  const badge = document.getElementById('premiumBadge');
+  const label = document.getElementById('premiumLabel');
+  if (state.isPremium) { badge.classList.add('active'); label.textContent = 'Premium ✓'; }
+  else { badge.classList.remove('active'); label.textContent = 'Premium'; }
+}
+
+function renderProgress() {
+  const habits = state.habits.filter(h => !h.archived);
+  const today = dateKey();
+  const done = habits.filter(h => h.completions[today]).length;
+  const total = habits.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('progressCircle').style.strokeDashoffset = 175.93 - (pct / 100) * 175.93;
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('progressText').textContent = `${done} / ${total} alışkanlık tamamlandı`;
+
+  let maxS = 0;
+  habits.forEach(h => maxS = Math.max(maxS, currentStreak(h)));
+  const se = document.getElementById('longestStreak');
+  if (maxS > 0) { se.style.display = 'flex'; document.getElementById('longestStreakVal').textContent = maxS; }
+  else se.style.display = 'none';
+
+  // Celebration
+  const celeb = document.getElementById('celebBanner');
+  if (total > 0 && done === total) {
+    if (!celeb.classList.contains('show')) { celeb.classList.add('show'); fireConfetti(); }
+  } else celeb.classList.remove('show');
+}
+
+function renderMoods() {
+  const today = dateKey();
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.mood) === state.moods[today]));
+  const hist = document.getElementById('moodHistory');
+  hist.innerHTML = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = dateKey(d);
+    const mood = state.moods[key];
+    const label = i === 0 ? 'Bugün' : DAYS[(d.getDay() + 6) % 7];
+    hist.innerHTML += `<div class="mood-day"><span class="emoji">${mood ? MOOD_EMOJIS[mood] : '⬜'}</span>${label}</div>`;
+  }
+}
+
+function renderHabits() {
+  const list = document.getElementById('habitList');
+  const habits = state.habits.filter(h => !h.archived);
+  if (!habits.length) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>Henüz alışkanlık yok</h3><p>İlk alışkanlığını ekleyerek başla</p></div>`;
+    return;
+  }
+  const today = dateKey();
+  list.innerHTML = habits.map(h => {
+    const done = !!h.completions[today];
+    const streak = currentStreak(h);
+    return `<div class="habit-card ${done?'done':''}" style="--habit-color:${h.color}"
+      onclick="toggleHabit('${h.id}')"
+      oncontextmenu="event.preventDefault();showAction('${h.id}')"
+      ontouchstart="startLP('${h.id}')" ontouchend="cancelLP()" ontouchmove="cancelLP()">
+      <div class="habit-icon" style="background:${done?h.color:h.color+'26'};color:${done?'#fff':h.color}">${done?'✓':h.icon}</div>
+      <div class="habit-info">
+        <div class="habit-title">${esc(h.title)}</div>
+        ${h.desc?`<div class="habit-desc">${esc(h.desc)}</div>`:''}
+        ${h.category?`<div class="habit-cat">${esc(h.category)}</div>`:''}
+      </div>
+      ${streak>0?`<div class="streak-badge" style="background:${h.color}26;color:${h.color}">🔥 ${streak}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderStats() {
+  const habits = state.habits.filter(h => !h.archived);
+  const today = dateKey();
+  const doneToday = habits.filter(h => h.completions[today]).length;
+  let maxS = 0, totalC = 0;
+  habits.forEach(h => { maxS = Math.max(maxS, currentStreak(h)); totalC += Object.values(h.completions).filter(Boolean).length; });
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="icon">📋</div><div class="value">${habits.length}</div><div class="label">Aktif</div></div>
+    <div class="stat-card"><div class="icon">✅</div><div class="value">${doneToday}/${habits.length}</div><div class="label">Bugün</div></div>
+    <div class="stat-card"><div class="icon">🔥</div><div class="value">${maxS} gün</div><div class="label">En Uzun Seri</div></div>
+    <div class="stat-card"><div class="icon">🏆</div><div class="value">${totalC}</div><div class="label">Toplam</div></div>`;
+
+  const heat = document.getElementById('heatmap');
+  heat.innerHTML = '';
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = dateKey(d);
+    let count = 0; habits.forEach(h => { if (h.completions[key]) count++; });
+    const level = count === 0 ? 0 : Math.min(4, count);
+    heat.innerHTML += `<div class="heat-cell level${level} ${i===0?'today':''}" title="${key}: ${count}">${d.getDate()}</div>`;
+  }
+
+  const cont = document.getElementById('habitStats');
+  if (!habits.length) { cont.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px 0">Henüz veri yok</p>'; return; }
+  cont.innerHTML = '<div style="padding:0 20px 8px;font-size:15px;font-weight:600">Alışkanlık Detayları</div>' +
+    habits.map(h => {
+      const rate = completionRate(h);
+      return `<div class="habit-stat">
+        <div class="habit-stat-header">
+          <div class="habit-stat-dot" style="background:${h.color}"></div>
+          <span style="flex:1;font-weight:600">${esc(h.title)}</span>
+          <span style="color:${h.color};font-weight:700">${Math.round(rate*100)}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:${rate*100}%;background:${h.color}"></div></div>
+        <div class="mini-stats">
+          <div class="mini-stat"><div class="v">${currentStreak(h)}</div><div class="l">Seri</div></div>
+          <div class="mini-stat"><div class="v">${bestStreak(h)}</div><div class="l">En iyi</div></div>
+          <div class="mini-stat"><div class="v">${Object.values(h.completions).filter(Boolean).length}</div><div class="l">Toplam</div></div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function renderSettings() {
+  const card = document.getElementById('settingsPremium');
+  if (state.isPremium) {
+    card.classList.add('active');
+    document.getElementById('settingsPremiumIcon').textContent = '✅';
+    document.getElementById('settingsPremiumTitle').textContent = 'Premium Aktif';
+    document.getElementById('settingsPremiumSub').textContent = 'Tüm özellikler açık';
+    document.getElementById('settingsPremiumAction').textContent = '';
+  } else {
+    card.classList.remove('active');
+    document.getElementById('settingsPremiumIcon').textContent = '⭐';
+    document.getElementById('settingsPremiumTitle').textContent = 'Ücretsiz Plan';
+    document.getElementById('settingsPremiumSub').textContent = 'En fazla 5 alışkanlık';
+    document.getElementById('settingsPremiumAction').textContent = 'Yükselt →';
+  }
+}
+
+// ===== ACTIONS =====
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.screen === name));
+  document.getElementById('fab').style.display = name === 'home' ? 'flex' : 'none';
+  if (name === 'stats') renderStats();
+}
+
+function toggleHabit(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const key = dateKey();
+  if (h.completions[key]) delete h.completions[key];
+  else h.completions[key] = true;
+  save(); render();
+  if (h.completions[key] && navigator.vibrate) navigator.vibrate(25);
+}
+
+function setMood(level) {
+  state.moods[dateKey()] = level; save(); renderMoods();
+  toast('Ruh halin kaydedildi ' + MOOD_EMOJIS[level], 'success');
+}
+
+let lpTimer = null;
+function startLP(id) { lpTimer = setTimeout(() => showAction(id), 500); }
+function cancelLP() { clearTimeout(lpTimer); }
+function showAction(id) { state.actionHabitId = id; document.getElementById('actionModal').classList.add('show'); }
+function hideAction() { document.getElementById('actionModal').classList.remove('show'); state.actionHabitId = null; }
+function archiveHabit() {
+  const h = state.habits.find(x => x.id === state.actionHabitId);
+  if (h) { h.archived = true; save(); render(); toast('Arşivlendi'); }
+  hideAction();
+}
+function deleteHabit() {
+  state.habits = state.habits.filter(x => x.id !== state.actionHabitId);
+  save(); render(); toast('Silindi'); hideAction();
+}
+
+// Add
+function showAddHabit() {
+  const active = state.habits.filter(h => !h.archived).length;
+  if (!state.isPremium && active >= FREE_LIMIT) {
+    toast('Ücretsiz planda en fazla 5 alışkanlık!', 'warning');
+    showPremium(); return;
+  }
+  state.selectedColor = 0; state.selectedIcon = 0; state.selectedDays = []; state.selectedCat = 'Genel';
+  document.getElementById('habitTitle').value = '';
+  document.getElementById('habitDesc').value = '';
+  document.getElementById('reminderToggle').classList.remove('on');
+  renderColorGrid(); renderIconGrid(); renderDayRow(); renderCatRow();
+  document.getElementById('addModal').classList.add('show');
+  setTimeout(() => document.getElementById('habitTitle').focus(), 250);
+}
+function hideAddHabit() { document.getElementById('addModal').classList.remove('show'); }
+
+function renderColorGrid() {
+  document.getElementById('colorGrid').innerHTML = COLORS.map((c,i) =>
+    `<div class="color-dot ${i===state.selectedColor?'selected':''}" style="background:${c}" onclick="state.selectedColor=${i};renderColorGrid()"></div>`).join('');
+}
+function renderIconGrid() {
+  document.getElementById('iconGrid').innerHTML = ICONS.map((ic,i) =>
+    `<div class="icon-btn ${i===state.selectedIcon?'selected':''}" onclick="state.selectedIcon=${i};renderIconGrid()">${ic}</div>`).join('');
+}
+function renderDayRow() {
+  document.getElementById('dayRow').innerHTML = DAYS.map((d,i) => {
+    const n = i+1; const sel = state.selectedDays.includes(n);
+    return `<button class="day-btn ${sel?'selected':''}" onclick="toggleDay(${n})">${d}</button>`;
+  }).join('');
+}
+function toggleDay(d) {
+  const i = state.selectedDays.indexOf(d);
+  if (i>=0) state.selectedDays.splice(i,1); else state.selectedDays.push(d);
+  renderDayRow();
+}
+function renderCatRow() {
+  document.getElementById('catRow').innerHTML = CATS.map(c =>
+    `<button class="cat-btn ${c===state.selectedCat?'selected':''}" onclick="state.selectedCat='${c}';renderCatRow()">${c}</button>`).join('');
+}
+
+function saveHabit() {
+  const title = document.getElementById('habitTitle').value.trim();
+  if (!title) { toast('Lütfen bir isim gir', 'warning'); return; }
+  const reminderOn = document.getElementById('reminderToggle').classList.contains('on');
+  state.habits.push({
+    id: uid(), title,
+    desc: document.getElementById('habitDesc').value.trim() || null,
+    category: state.selectedCat,
+    color: COLORS[state.selectedColor], icon: ICONS[state.selectedIcon],
+    weekDays: [...state.selectedDays], completions: {},
+    createdAt: new Date().toISOString(), archived: false,
+    reminder: reminderOn ? document.getElementById('reminderTime').value : null
+  });
+  save(); hideAddHabit(); render();
+  toast('Alışkanlık eklendi! ✅', 'success');
+}
+
+// Premium
+function showPremium() { document.getElementById('premiumModal').classList.add('show'); }
+function hidePremium() { document.getElementById('premiumModal').classList.remove('show'); }
+function buyPremium(plan) {
+  // DEMO — Gerçekte burada Google Play Billing / RevenueCat çağrılır
+  state.isPremium = true; save(); hidePremium(); render();
+  toast('Premium aktif! (Demo)', 'success'); fireConfetti();
+}
+
+// Notifications
+function updateNotifUI() {
+  const t = document.getElementById('notifToggle');
+  const s = document.getElementById('notifStatus');
+  const row = document.getElementById('dailyReminderRow');
+  if (state.notificationsEnabled) {
+    t.classList.add('on'); s.textContent = 'Açık'; row.style.display = 'flex';
+    document.getElementById('dailyReminderTime').value = state.dailyReminderTime;
+  } else {
+    t.classList.remove('on'); s.textContent = 'Kapalı — dokunarak aç'; row.style.display = 'none';
+  }
+}
+async function toggleNotifications() {
+  if (!state.notificationsEnabled) {
+    if (!('Notification' in window)) { toast('Bu tarayıcı desteklemiyor', 'warning'); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { toast('İzin verilmedi', 'warning'); return; }
+    state.notificationsEnabled = true;
+    toast('Bildirimler açıldı 🔔', 'success');
+    scheduleDailyReminder();
+  } else {
+    state.notificationsEnabled = false;
+    toast('Bildirimler kapatıldı');
+  }
+  save(); updateNotifUI();
+}
+function saveDailyReminder() {
+  state.dailyReminderTime = document.getElementById('dailyReminderTime').value;
+  save(); scheduleDailyReminder();
+  toast('Hatırlatma saati kaydedildi');
+}
+function scheduleDailyReminder() {
+  if (!state.notificationsEnabled || !('Notification' in window)) return;
+  // Basit günlük hatırlatma (sayfa açıkken çalışır)
+  // Gerçek PWA'da Periodic Background Sync veya push kullanılır
+}
+
+// Data
+function exportData() {
+  const data = JSON.stringify({ habits: state.habits, moods: state.moods }, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `habitpro-${dateKey()}.json`; a.click();
+  toast('Yedek indirildi', 'success');
+}
+function confirmClear() {
+  if (confirm('Tüm veriler silinecek. Emin misin?')) {
+    state.habits = []; state.moods = {}; save(); render();
+    toast('Tüm veriler silindi');
+  }
+}
+
+// PWA Install
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+async function installPWA() {
+  if (!deferredPrompt) { toast('Tarayıcı menüsünden "Ana ekrana ekle" kullan'); return; }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBanner').classList.remove('show');
+  deferredPrompt = null;
+}
+
+// Modal close
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+});
+
+// Init
+load();
+render();
+</script>
+</body>
+</html>
